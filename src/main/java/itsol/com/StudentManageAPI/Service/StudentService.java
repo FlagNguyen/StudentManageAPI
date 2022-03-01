@@ -1,6 +1,7 @@
 package itsol.com.StudentManageAPI.Service;
 
 import itsol.com.StudentManageAPI.Constant.DateTime;
+import itsol.com.StudentManageAPI.Controller.StudentController;
 import itsol.com.StudentManageAPI.DAO.Entity.STUDENTS;
 import itsol.com.StudentManageAPI.DAO.Repository.StudentRepository;
 import itsol.com.StudentManageAPI.DTO.Reponse.ErrorResponse;
@@ -9,6 +10,9 @@ import itsol.com.StudentManageAPI.DTO.Request.SearchingRequest;
 import itsol.com.StudentManageAPI.DTO.Request.StudentRequest;
 import itsol.com.StudentManageAPI.Utility.DataUtil;
 import itsol.com.StudentManageAPI.Utility.DateFormat;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +26,7 @@ public class StudentService {
     @Autowired
     StudentRepository studentRepository;
 
+    private static final Logger LOGGER = LogManager.getLogger(StudentController.class);
     DataUtil dataUtil = new DataUtil();
     DateFormat dateFormat = new DateFormat();
 
@@ -36,8 +41,10 @@ public class StudentService {
             ErrorResponse response = new ErrorResponse();
             response.setErrorCode("000");
             response.setMessage("resource not found");
+            LOGGER.error("Resource not found");
             return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
         } else {
+            LOGGER.info("Get all successfully");
             return new ResponseEntity<List<StudentRespone>>(studentRespones, HttpStatus.OK);
         }
     }
@@ -51,8 +58,10 @@ public class StudentService {
             ErrorResponse response = new ErrorResponse();
             response.setErrorCode("404");
             response.setMessage("Not found this id");
+            LOGGER.error("Not found this id");
             return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
         } else {
+            LOGGER.log(Level.INFO,"Get Student By Code Successfully");
             return new ResponseEntity<StudentRespone>(sp, HttpStatus.OK);
         }
     }
@@ -63,12 +72,14 @@ public class StudentService {
             ErrorResponse response = new ErrorResponse();
             response.setErrorCode("404");
             response.setMessage("Lack of attributes");
+            LOGGER.error("Lack of attributes");
             return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
         }
 
         students.setName(dataUtil.standardlizeString(students.getName()));
         students.setHometown(dataUtil.standardlizeString(students.getHometown()));
-
+        studentRepository.addStudent(students);
+        LOGGER.info("Add student successfully");
         return new ResponseEntity<StudentRequest>(students, HttpStatus.OK);
     }
 

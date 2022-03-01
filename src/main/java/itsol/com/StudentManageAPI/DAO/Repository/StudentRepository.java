@@ -35,7 +35,7 @@ public class StudentRepository  {
         jdbcTemplate.update(sql.toString(), getNextId(), students.getName(), students.getGender(),
                 students.getDob(), students.getClassName(), students.getMajor(), students.getHometown()
                 , students.getAvgMark(), 0);
-        return getStudentByCode(getNextId());
+        return getStudentByCode(getNextId()-1);
     }
 
     public List<STUDENTS> updateStudent(STUDENTS students, int code) {
