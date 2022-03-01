@@ -2,6 +2,7 @@ package itsol.com.StudentManageAPI.DAO.Repository;
 
 import itsol.com.StudentManageAPI.DAO.Entity.STUDENTS;
 import itsol.com.StudentManageAPI.DTO.Request.SearchingRequest;
+import itsol.com.StudentManageAPI.DTO.Request.StudentRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,28 +17,28 @@ public class StudentRepository  {
     protected JdbcTemplate jdbcTemplate;
 
     public List<STUDENTS> getAll() {
-        String sql = "SELECT * FROM STUDENTS";
+        String sql = "SELECT * FROM STUDENTS WHERE isdeleted = 0";
         List<STUDENTS> students = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(STUDENTS.class));
         return students;
     }
 
-    public STUDENTS getStudentByCode(int code) {
+    public List<STUDENTS> getStudentByCode(int code) {
         String sql = "SELECT * FROM STUDENTS s WHERE s.id = ? AND s.isdeleted = 0";
-        STUDENTS students = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(STUDENTS.class), code);
+        List<STUDENTS> students = jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(STUDENTS.class), code);
         return students;
     }
 
-    public STUDENTS addStudent(STUDENTS students) {
+    public List<STUDENTS> addStudent(StudentRequest students) {
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO STUDENTS");
-        sql.append("(id,name,gender,dob,class_name,major,hometown,avg_mark,isdeleted) VALUES (?, ?, ?, ?, ?, ? ,? ,? ,? )");
-        jdbcTemplate.update(sql.toString(), students.getId(), students.getName(), students.getGender(),
+        sql.append(" (id,name,gender,dob,class_name,major,hometown,avg_mark,isdeleted) VALUES (?, ?, ?, ?, ?, ? ,? ,? ,? )");
+        jdbcTemplate.update(sql.toString(), getNextId(), students.getName(), students.getGender(),
                 students.getDob(), students.getClassName(), students.getMajor(), students.getHometown()
                 , students.getAvgMark(), 0);
-        return getStudentByCode(students.getId());
+        return getStudentByCode(getNextId());
     }
 
-    public STUDENTS updateStudent(STUDENTS students, int code) {
+    public List<STUDENTS> updateStudent(STUDENTS students, int code) {
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE STUDENTS s ");
         sql.append("SET s.name= ? ,s.gender = ? ,s.dob = ? ,s.class_name = ? ,s.major = ? ,s.hometown = ? ,s.avg_mark = ?");
@@ -47,7 +48,7 @@ public class StudentRepository  {
         return getStudentByCode(code);
     }
 
-    public STUDENTS deleteStudent(int code){
+    public List<STUDENTS> deleteStudent(int code){
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE STUDENTS s SET s.isdeleted = 1 WHERE s.id = ?");
         jdbcTemplate.update(sql.toString(),code);
@@ -74,4 +75,9 @@ public class StudentRepository  {
         return students;
     }
 
+    public int getNextId(){
+        String sql = "SELECT COUNT(*)\n" +
+                "FROM STUDENTS";
+        return jdbcTemplate.queryForObject(sql, Integer.class) + 100001;
+    }
 }

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.sql.Date;
 
 @Data
 @AllArgsConstructor
@@ -16,7 +17,7 @@ public class StudentRequest {
     @NotEmpty(message = "Gender is mandatory")
     private String gender;
     @NotEmpty(message = "Date of Birth is mandatory")
-    private String dob;
+    private Date dob;
     @NotEmpty(message = "Class's name is mandatory")
     private String className;
     @NotEmpty(message = "Major is mandatory")
