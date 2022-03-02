@@ -1,17 +1,11 @@
 package itsol.com.StudentManageAPI.Controller;
 
-import itsol.com.StudentManageAPI.DAO.Entity.STUDENTS;
-import itsol.com.StudentManageAPI.DTO.Reponse.StudentRespone;
 import itsol.com.StudentManageAPI.DTO.Request.SearchingRequest;
 import itsol.com.StudentManageAPI.DTO.Request.StudentRequest;
 import itsol.com.StudentManageAPI.Service.StudentService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "/Students")
@@ -21,7 +15,7 @@ public class StudentController {
     StudentService service;
 
     @GetMapping
-    public ResponseEntity getAll() {
+    public ResponseEntity<?> getAll() {
         return service.getAll();
     }
 
@@ -36,22 +30,22 @@ public class StudentController {
     }
 
     @PutMapping(path = "/{id}")
-    public List<STUDENTS> updateStudent(@RequestBody STUDENTS students, @PathVariable int id) {
+    public ResponseEntity updateStudent(@RequestBody StudentRequest students, @PathVariable int id) {
         return service.updateStudent(students, id);
     }
 
     @DeleteMapping(path = "/{id}")
-    public List<STUDENTS> deleteStudent(@PathVariable int id) {
+    public ResponseEntity deleteStudent(@PathVariable int id) {
         return service.deleteStudent(id);
     }
 
-    @PostMapping(path = "/search")
-    public List<STUDENTS> searchStudents(@RequestBody SearchingRequest sRequest) {
+    @GetMapping(path = "/search")
+    public ResponseEntity searchStudents(@RequestBody SearchingRequest sRequest) {
         return service.searchStudents(sRequest);
     }
 
     @GetMapping(path = "/birthday")
-    public List<STUDENTS> getBirthdayStudent() {
+    public ResponseEntity getBirthdayStudent() {
         return service.getBirthdayStudent();
     }
 }

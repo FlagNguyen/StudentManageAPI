@@ -1,6 +1,5 @@
 package itsol.com.StudentManageAPI.Service;
 
-import itsol.com.StudentManageAPI.Constant.DateTime;
 import itsol.com.StudentManageAPI.Controller.StudentController;
 import itsol.com.StudentManageAPI.DAO.Entity.STUDENTS;
 import itsol.com.StudentManageAPI.DAO.Repository.StudentRepository;
@@ -9,7 +8,6 @@ import itsol.com.StudentManageAPI.DTO.Reponse.StudentRespone;
 import itsol.com.StudentManageAPI.DTO.Request.SearchingRequest;
 import itsol.com.StudentManageAPI.DTO.Request.StudentRequest;
 import itsol.com.StudentManageAPI.Utility.DataUtil;
-import itsol.com.StudentManageAPI.Utility.DateFormat;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,14 +25,13 @@ public class StudentService {
     StudentRepository studentRepository;
 
     private static final Logger LOGGER = LogManager.getLogger(StudentController.class);
-    DataUtil dataUtil = new DataUtil();
-    DateFormat dateFormat = new DateFormat();
 
-    public ResponseEntity<?> getAll() {
+    DataUtil dataUtil = new DataUtil();
+
+    public ResponseEntity getAll() {
         List<STUDENTS> students = studentRepository.getAll();
         List<StudentRespone> studentRespones = new ArrayList<>();
-        for (int i = 0; i < students.size(); i++) {
-            STUDENTS s = students.get(i);
+        for (STUDENTS s : students) {
             studentRespones.add(new StudentRespone(s.getId(), s.getName(), s.getDob().toString(), s.getGender(), s.getClassName(), s.getMajor(), s.getHometown(), s.getAvgMark()));
         }
         if (students.isEmpty()) {
@@ -42,10 +39,10 @@ public class StudentService {
             response.setErrorCode("000");
             response.setMessage("resource not found");
             LOGGER.error("Resource not found");
-            return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } else {
             LOGGER.info("Get all successfully");
-            return new ResponseEntity<List<StudentRespone>>(studentRespones, HttpStatus.OK);
+            return new ResponseEntity<>(studentRespones, HttpStatus.OK);
         }
     }
 
@@ -59,10 +56,10 @@ public class StudentService {
             response.setErrorCode("404");
             response.setMessage("Not found this id");
             LOGGER.error("Not found this id");
-            return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } else {
-            LOGGER.log(Level.INFO,"Get Student By Code Successfully");
-            return new ResponseEntity<StudentRespone>(sp, HttpStatus.OK);
+            LOGGER.log(Level.INFO, "Get Student By Code Successfully");
+            return new ResponseEntity<>(sp, HttpStatus.OK);
         }
     }
 
@@ -73,30 +70,65 @@ public class StudentService {
             response.setErrorCode("404");
             response.setMessage("Lack of attributes");
             LOGGER.error("Lack of attributes");
-            return new ResponseEntity<ErrorResponse>(response, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
-
         students.setName(dataUtil.standardlizeString(students.getName()));
         students.setHometown(dataUtil.standardlizeString(students.getHometown()));
         studentRepository.addStudent(students);
         LOGGER.info("Add student successfully");
-        return new ResponseEntity<StudentRequest>(students, HttpStatus.OK);
+        return new ResponseEntity<>(students, HttpStatus.OK);
     }
 
-    public List<STUDENTS> updateStudent(STUDENTS students, int id) {
-        return studentRepository.updateStudent(students, id);
+    public ResponseEntity updateStudent(StudentRequest students, int id) {
+        if (students.getName().isEmpty() || students.getGender().isEmpty() || students.getDob().toString().isEmpty() ||
+                students.getClassName().isEmpty() || students.getMajor().isEmpty() || students.getHometown().isEmpty()) {
+            ErrorResponse response = new ErrorResponse();
+            response.setErrorCode("404");
+            response.setMessage("Lack of attributes");
+            LOGGER.error("Lack of attributes");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        students.setName(dataUtil.standardlizeString(students.getName()));
+        students.setHometown(dataUtil.standardlizeString(students.getHometown()));
+        studentRepository.updateStudent(students, id);
+        LOGGER.info("Update student's id: " + id + " successfully");
+        return new ResponseEntity<>(students, HttpStatus.OK);
     }
 
-    public List<STUDENTS> deleteStudent(int id) {
-        return studentRepository.deleteStudent(id);
+    public ResponseEntity deleteStudent(int id) {
+        if (studentRepository.getStudentByCode(id).isEmpty()) {
+            LOGGER.info("Already deleted");
+            ErrorResponse response = new ErrorResponse();
+            response.setErrorCode("003");
+            response.setMessage("Already deleted");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        LOGGER.info("Delete Successfully");
+        return new ResponseEntity<>(studentRepository.deleteStudent(id), HttpStatus.OK);
     }
 
-    public List<STUDENTS> searchStudents(SearchingRequest sRequest) {
-        return studentRepository.searchStudent(sRequest);
+    public ResponseEntity searchStudents(SearchingRequest sRequest) {
+        if (sRequest.getSearchingAttributes().isEmpty() || sRequest.getSearchingMessage().isEmpty()) {
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setErrorCode("004");
+            errorResponse.setMessage("Lack of attribute's searching request");
+            LOGGER.error("Lack of attribute's searching request");
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
+        List<STUDENTS> students = studentRepository.searchStudent(sRequest);
+        return new ResponseEntity<>(students, HttpStatus.OK);
     }
 
-    public List<STUDENTS> getBirthdayStudent() {
-        return studentRepository.getBirthdayStudent();
+    public ResponseEntity getBirthdayStudent() {
+        List<STUDENTS> students = studentRepository.getBirthdayStudent();
+        if (students.isEmpty()) {
+            ErrorResponse response = new ErrorResponse();
+            response.setErrorCode("005");
+            response.setMessage("Resource not found or no one have birthday today");
+            LOGGER.error("Resource not found or no one have birthday today");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(students, HttpStatus.OK);
     }
 
 }
